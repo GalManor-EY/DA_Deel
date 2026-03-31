@@ -1,5 +1,3 @@
-
-
 # load_data.py
 
 import pandas as pd
@@ -36,7 +34,7 @@ def load_payout_q4_25():
         if_exists="replace",
         index=False,
         method="multi",
-        chunksize=5000
+        chunksize=8000
     )
 
     print(f"Upload complete. {len(df)} rows inserted into '{TABLE}'.")
