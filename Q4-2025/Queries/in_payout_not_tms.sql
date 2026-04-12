@@ -33,9 +33,9 @@ all_tms_25 AS (
     WHERE DIRECTION = 'OUTGOING'
       AND DEEL_PLATFORM_TYPE = 'Withdrawal'
       AND TYPE <> 'Returned'
-      AND RECEIVER_ID IS NULL
-      AND SENDER_ID IS NULL
-      AND RETURN_ID IS NULL
+      AND RECEIVER_ID =""
+      AND SENDER_ID =""
+      AND RETURN_ID =""
 )
 
 SELECT

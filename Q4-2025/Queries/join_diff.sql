@@ -30,3 +30,6 @@ LEFT JOIN all_bank_transactions_q4_25 tms_q4_25
 WHERE (payout.total_cashout_usd - tms_q4_25.usd_amount) <> 0
   AND tms_q4_25.reconciliation_id IS NOT NULL
 GROUP BY payout.PAYMENT_METHOD;
+
+
+
