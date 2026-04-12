@@ -1,0 +1,5 @@
+cutoff_year,cutoff_month,if_alviere,cnt,sum_initial_withdrawal_usd
+2026.0,1.0,No Alviere,4536,7731103.035250407
+,,Alviere,5049,14071132.570000004
+,,No Alviere,383,1719024.937124775
+2025.0,3.0,No Alviere,1,300.0
