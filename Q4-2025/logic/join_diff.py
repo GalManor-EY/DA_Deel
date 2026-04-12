@@ -1,12 +1,19 @@
 
 # logic/join_diff.py
 
-from utils.db_mysql import run_query, load_sql
+import os
+from utils.sql_runner import run_query, load_sql
+from utils.db_mysql import get_engine
 import pandas as pd
 
-def run_join_diff():
-    query = load_sql("queries/join_diff.sql")
-    df = run_query(query)
-    df.to_csv("results/join_diff.csv", index=False)
+def run():
+    query = load_sql(r"Queries/join_diff.sql")
+    engine = get_engine()
+    df = run_query(engine, query)
+
+    os.makedirs("results", exist_ok=True)
+    df.to_csv(r"results\join_diff.csv", index=False)
     print("join_diff completed:", len(df), "rows")
+    return df
+
 

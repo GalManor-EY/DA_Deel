@@ -37,13 +37,18 @@ all_tms_25 AS (
       AND SENDER_ID IS NULL
       AND RETURN_ID IS NULL
 )
+
 SELECT
-    YEAR(all_tms_25.created_at_date) AS cutoff_year,
+    YEAR(all_tms_25.created_at_date)  AS cutoff_year,
     MONTH(all_tms_25.created_at_date) AS cutoff_month,
-    CASE WHEN LOWER(all_tms_25.PAYMENT_PROVIDER_NAME) = 'alviere' THEN 'Alviere' ELSE 'No Alviere' END AS if_alviere,
+    CASE 
+      WHEN LOWER(TRIM(in_payout_not_in_tms.PAYMENT_PROVIDER_NAME)) = 'alviere' THEN 'Alviere'
+      ELSE 'No Alviere'
+    END AS if_alviere,
     COUNT(*) AS cnt,
     SUM(in_payout_not_in_tms.INITIAL_WITHDRAWAL_AMOUNT_USD) AS sum_initial_withdrawal_usd
 FROM in_payout_not_in_tms
 LEFT JOIN all_tms_25
-    ON in_payout_not_in_tms.tms_reconciliation_id = all_tms_25.reconciliation_id
-GROUP BY 1,2,3;
+  ON in_payout_not_in_tms.tms_reconciliation_id = all_tms_25.reconciliation_id
+GROUP BY cutoff_year, cutoff_month, if_alviere;
+
