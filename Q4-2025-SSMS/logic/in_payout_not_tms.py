@@ -1,5 +1,5 @@
 
-from utils.db_mysql import get_engine
+from utils.db_sqlserver import get_engine
 
 from utils.sql_runner import load_sql, run_query
 
