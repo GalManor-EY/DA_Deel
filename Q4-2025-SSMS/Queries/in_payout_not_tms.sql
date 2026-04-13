@@ -3,14 +3,17 @@
 WITH payout_q4_2025 AS (
     SELECT *
     FROM dbo.stg_payout_q4_2025
-    WHERE MONTH(CREATED_AT) IN (10,11,12)
-      AND YEAR(CREATED_AT) = 2025
+    WHERE TRY_CONVERT(date, LEFT(WITHDRAWAL_CREATED_AT, 10)) IS NOT NULL
+AND YEAR(TRY_CONVERT(date, LEFT(WITHDRAWAL_CREATED_AT, 10))) = 2025
+AND MONTH(TRY_CONVERT(date, LEFT(WITHDRAWAL_CREATED_AT, 10))) IN (10,11,12) 
+
 ),
 all_bank_transactions_q4_25 AS (
     SELECT *
     FROM dbo.stg_tms_transactions_q4_2025
-    WHERE YEAR(LEFT(CREATED_AT,10)) = 2025
-      AND MONTH(LEFT(CREATED_AT,10)) IN (10,11,12)
+    WHERE TRY_CONVERT(date, LEFT(CREATED_AT, 10)) IS NOT NULL
+      AND YEAR(TRY_CONVERT(date, LEFT(CREATED_AT, 10))) = 2025
+      AND MONTH(TRY_CONVERT(date, LEFT(CREATED_AT, 10))) IN (10,11,12)
       AND DIRECTION = 'OUTGOING'
       AND DEEL_PLATFORM_TYPE = 'Withdrawal'
       AND TYPE <> 'Returned'
@@ -46,11 +49,17 @@ SELECT
       ELSE 'No Alviere'
     END AS if_alviere,
     COUNT(*) AS cnt,
-    SUM(in_payout_not_in_tms.INITIAL_WITHDRAWAL_AMOUNT_USD) AS sum_initial_withdrawal_usd
-FROM in_payout_not_in_tms
+    
+SUM(TRY_CAST(in_payout_not_in_tms.INITIAL_WITHDRAWAL_AMOUNT_USD AS DECIMAL(18,2))) AS sum_initial_withdrawal_usd
+    FROM in_payout_not_in_tms
 LEFT JOIN all_tms_25
   ON in_payout_not_in_tms.tms_reconciliation_id = all_tms_25.reconciliation_id
-GROUP BY cutoff_year, cutoff_month, if_alviere;
+GROUP BY YEAR(all_tms_25.created_at_date), MONTH(all_tms_25.created_at_date),
+    CASE 
+    WHEN LOWER(TRIM(in_payout_not_in_tms.PAYMENT_PROVIDER_NAME)) = 'alviere'
+        THEN 'Alviere'
+    ELSE 'No Alviere'
+    END;
 
 
 
