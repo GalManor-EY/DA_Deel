@@ -1,18 +1,11 @@
-from utils.db_sqlserver import get_engine
-from utils.sql_runner import run_query
+# staging/load_all.py
 
-def run_sql_file(engine, path):
-    with open(path, "r", encoding="utf-8") as f:
-        run_query(engine, f.read())
+from staging.load_payout import load_payout
+from staging.load_TMS import load_tms
 
 def main():
-    engine = get_engine()
-    run_sql_file(engine, "staging/load_payout.sql")
-    run_sql_file(engine, "staging/load_tms.sql")
+    load_payout()
+    load_tms()
 
 if __name__ == "__main__":
     main()
-
-
-
-    

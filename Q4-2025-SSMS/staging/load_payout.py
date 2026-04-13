@@ -3,7 +3,7 @@ import csv
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-CSV_PATH = r"C:\Users\Gal.Manor\EY\IL-Tech_Risk - מסמכים\Clients\2025\Deel\DA\Deel IT Audit Q4-25\01 - Org files\Payout data Q4 2025\Payment Table contractor withdrawal.csv"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\Payment Table contractor withdrawal.csv"
 TABLE_NAME = "stg_payout_q4_2025"
 
 def sanitize(col: str) -> str:
