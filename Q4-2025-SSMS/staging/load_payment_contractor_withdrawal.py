@@ -5,7 +5,7 @@ from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
 # 🔁 עדכן את שם הקובץ לפי מה שיש לך בפועל בתיקייה
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\payment_contractor_withdrawal.csv"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\Payment Table contractor withdrawal.csv"
 
 # שם טבלת staging ב-DB
 TABLE_NAME = "stg_payment_contractor_withdrawal"

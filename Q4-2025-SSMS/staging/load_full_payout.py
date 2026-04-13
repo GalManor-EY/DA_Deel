@@ -4,7 +4,7 @@ from collections import defaultdict
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\full_payout.csv"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\All time payout table.csv"
 TABLE_NAME = "stg_full_payout_q4_2025"
 
 

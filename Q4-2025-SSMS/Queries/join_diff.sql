@@ -2,13 +2,13 @@
 
 WITH payout_q4_2025 AS (
     SELECT *
-    FROM payout_q4_25
+    FROM dbo.stg_payout_q4_2025
     WHERE MONTH(withdrawal_created_at) IN (10,11,12)
       AND YEAR(withdrawal_created_at) = 2025
 ),
 all_bank_transactions_q4_25 AS (
     SELECT *
-    FROM tms_transactions_q4_25
+    FROM dbo.stg_tms_transactions_q4_2025
     WHERE YEAR(LEFT(CREATED_AT,10)) = 2025
       AND MONTH(LEFT(CREATED_AT,10)) IN (10,11,12)
       AND DIRECTION = 'OUTGOING'

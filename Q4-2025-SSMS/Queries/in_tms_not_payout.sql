@@ -1,9 +1,9 @@
 
 WITH all_bank_transactions_filtered_q4_2025 AS (
     SELECT *
-    FROM all_bank_transactions_full_to_Q4_2025
-    WHERE YEAR(LEFT(CREATED_AT,10)) = 2025
-      AND MONTH(LEFT(CREATED_AT,10)) IN (10,11,12)
+    FROM dbo.stg_full_tms_q4_2025
+    WHERE YEAR(LEFT(created_at,10)) = 2025
+      AND MONTH(LEFT(created_at,10)) IN (10,11,12)
       AND DIRECTION = 'OUTGOING'
       AND DEEL_PLATFORM_TYPE = 'Withdrawal'
       AND TYPE <> 'Returned'
@@ -13,7 +13,7 @@ WITH all_bank_transactions_filtered_q4_2025 AS (
 ),
 all_payment_contractor_withdrawal AS (
     SELECT *
-    FROM payment_contractor_withdrawal_q2_25
+    FROM dbo.stg_payment_contractor_withdrawal
     WHERE PURPOSE = 'contractor_payment'
       AND LEFT(CREATED_AT, 4) IN ('2024','2025')
 ),
@@ -31,7 +31,7 @@ tms_only_contractor_withdrawals AS (
 ),
 payout_filtered_q4_25 AS (
     SELECT *
-    FROM payout_full_to_Q4_25
+    FROM dbo.stg_full_payout_q4_2025
     WHERE MONTH(LEFT(withdrawal_created_at,10)) IN (10,11,12)
       AND YEAR(LEFT(withdrawal_created_at,10)) = 2025
 ),
@@ -51,7 +51,7 @@ payout_full AS (
     SELECT
         *,
         LEFT(withdrawal_created_at,10) AS withdrawal_created_at_date
-    FROM payout_full_to_Q4_25
+    FROM dbo.stg_full_payout_q4_2025
 )
 SELECT
     YEAR(payout_full.withdrawal_created_at_date) AS cutoff_year,
