@@ -3,8 +3,8 @@
 WITH payout_q4_2025 AS (
     SELECT *
     FROM dbo.stg_payout_q4_2025
-    WHERE MONTH(withdrawal_created_at) IN (10,11,12)
-      AND YEAR(withdrawal_created_at) = 2025
+    WHERE MONTH(CREATED_AT) IN (10,11,12)
+      AND YEAR(CREATED_AT) = 2025
 ),
 all_bank_transactions_q4_25 AS (
     SELECT *
