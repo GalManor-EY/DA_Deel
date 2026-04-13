@@ -4,21 +4,11 @@ from collections import defaultdict
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-# 🔁 עדכן רק את זה לפי הקובץ בפועל (חייב להיות נתיב נגיש ל-SQL Server)
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\All time payout table.csv"
-
-# שם טבלת ה-staging שניצור ב-SSMS
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\full_payout.csv"
 TABLE_NAME = "stg_full_payout_q4_2025"
 
 
 def sanitize_base(col: str) -> str:
-    """
-    מנקה שם עמודה שיהיה חוקי ב-SQL Server:
-    - מסיר BOM אם קיים
-    - מחליף רווחים/מקפים ל-_
-    - מחליף תווים בעייתיים ל-_
-    - לא מאפשר שם ריק
-    """
     col = (col or "").strip()
     col = col.replace("\ufeff", "")  # BOM
     col = col.replace(" ", "_").replace("-", "_")
@@ -35,17 +25,11 @@ def sanitize_base(col: str) -> str:
 
 
 def sanitize_and_deduplicate(headers):
-    """
-    מבטיח שמות עמודות ייחודיים.
-    לדוגמה: RECONCILIATION_ID מופיע פעמיים -> RECONCILIATION_ID, RECONCILIATION_ID_2
-    """
     counts = defaultdict(int)
     cols = []
 
     for i, h in enumerate(headers, start=1):
         base = sanitize_base(h)
-
-        # אם יצא COL (למשל header ריק) נוסיף אינדקס כדי להבטיח ייחודיות
         if base == "COL":
             base = f"COL_{i}"
 
@@ -61,7 +45,7 @@ def sanitize_and_deduplicate(headers):
 def load_full_payout():
     engine = get_engine()
 
-    # 1) קוראים רק header
+    # 1️⃣ קריאת header
     with open(CSV_PATH, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
         headers = next(reader)
@@ -71,7 +55,7 @@ def load_full_payout():
 
     cols = sanitize_and_deduplicate(headers)
 
-    # 2) CREATE TABLE דינמי (כל העמודות NVARCHAR(MAX))
+    # 2️⃣ CREATE TABLE
     columns_sql = ",\n        ".join(f"[{c}] NVARCHAR(MAX)" for c in cols)
 
     ddl_sql = f"""
@@ -86,7 +70,7 @@ def load_full_payout():
     with engine.begin() as conn:
         conn.execute(text(ddl_sql))
 
-    # 3) BULK INSERT
+    # 3️⃣ BULK INSERT + ספירת שורות
     bulk_sql = f"""
     BULK INSERT dbo.{TABLE_NAME}
     FROM '{CSV_PATH}'
@@ -100,5 +84,8 @@ def load_full_payout():
 
     with engine.begin() as conn:
         conn.execute(text(bulk_sql))
+        rows = conn.execute(
+            text(f"SELECT COUNT(*) FROM dbo.{TABLE_NAME}")
+        ).scalar()
 
-    print(f"✅ Loaded FULL payout into dbo.{TABLE_NAME}")
+    print(f"✅ Loaded FULL payout into dbo.{TABLE_NAME} | rows loaded: {rows}")
