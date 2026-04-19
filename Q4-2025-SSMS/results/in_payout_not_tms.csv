@@ -1,0 +1,13 @@
+tms_cutoff_year,tms_cutoff_month,if_alviere,if_recon_id,cnt,sum_initial_withdrawal_usd,sum_total_cashout_usd
+2025.0,11.0,Alviere,recon_id_exist,1288,3454655.5,3454655.5
+,,No Alviere,no_recon_id,131,217503.51,
+2025.0,12.0,Alviere,recon_id_exist,1455,4213657.7,4213657.7
+2025.0,3.0,No Alviere,recon_id_exist,6,15830.0,15561.11
+2025.0,1.0,No Alviere,recon_id_exist,1,7676.25,7676.25
+,,Alviere,no_recon_id,527,1487938.04,
+2025.0,10.0,Alviere,recon_id_exist,1779,4914881.33,4914881.33
+,,No Alviere,recon_id_exist,5,4307.12,4238.14
+2026.0,1.0,No Alviere,recon_id_exist,4620,8670034.11,8601805.2
+2025.0,9.0,No Alviere,recon_id_exist,149,525286.15,524830.33
+2025.0,5.0,No Alviere,recon_id_exist,2,519.21,513.29
+2025.0,2.0,No Alviere,recon_id_exist,11,13578.74,13401.33

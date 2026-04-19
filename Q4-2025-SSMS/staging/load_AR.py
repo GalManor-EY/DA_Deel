@@ -1,50 +1,80 @@
-# staging/load_tms.py
+# staging/load_AR.py
 import csv
 from collections import defaultdict
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\updated version\Q4 2025 - TMS Transactions & Reconciliations.csv"
-TABLE_NAME = "stg_tms_transactions_q4_2025"
+# ✅ עדכן את הנתיב לקובץ ה-AR שלך
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\AR FY 2025.csv"
+
+# ✅ טבלה ייעודית לבדיקת השוואה (לא חלק מ-load_all)
+TABLE_NAME = "AR_FY_25"
+
 
 def sanitize_base(col: str) -> str:
+    """
+    מנקה שם עמודה שיהיה חוקי ב-SQL Server:
+    - מסיר BOM אם קיים
+    - מחליף רווחים/מקפים ל-_
+    - מסיר תווים בעייתיים (משאיר אותיות/מספרים/_)
+    """
     col = (col or "").strip()
     col = col.replace("\ufeff", "")  # BOM
     col = col.replace(" ", "_").replace("-", "_")
+
     cleaned = []
     for ch in col:
         cleaned.append(ch if (ch.isalnum() or ch == "_") else "_")
     col = "".join(cleaned)
+
     return col if col else "COL"
 
+
 def sanitize_and_deduplicate(headers):
+    """
+    מוודא שכל שמות העמודות ייחודיים.
+    אם יש כפילות: COL, COL -> COL, COL_2
+    """
     counts = defaultdict(int)
     cols = []
+
     for i, h in enumerate(headers, start=1):
         base = sanitize_base(h)
+
+        # אם יצא שם ריק/כללי, נוסיף אינדקס כדי למנוע כפילויות
         if base == "COL":
             base = f"COL_{i}"
+
         counts[base] += 1
         cols.append(base if counts[base] == 1 else f"{base}_{counts[base]}")
+
     return cols
 
+
 def detect_row_terminator(path: str) -> str:
+    """
+    מזהה האם הקובץ משתמש ב-CRLF (\r\n) או LF (\n)
+    ומחזיר ROWTERMINATOR מתאים ל-BULK INSERT.
+    """
     with open(path, "rb") as f:
-        sample = f.read(1024 * 1024)
+        sample = f.read(1024 * 1024)  # 1MB
     return "0x0d0a" if b"\r\n" in sample else "0x0a"
 
-def load_tms():
+
+def load_AR():
     engine = get_engine()
 
+    # 1️⃣ קריאת header בלבד (csv.reader יודע להתמודד עם גרשיים/פסיקים בתוך שדה)
     with open(CSV_PATH, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
-        headers = next(reader)
+        headers = next(reader, None)
 
     if not headers:
         raise ValueError("CSV header is empty / invalid")
 
     cols = sanitize_and_deduplicate(headers)
 
+    # 2️⃣ CREATE TABLE דינמי
     columns_sql = ",\n        ".join(f"[{c}] NVARCHAR(MAX)" for c in cols)
 
     ddl_sql = f"""
@@ -59,6 +89,7 @@ def load_tms():
     with engine.begin() as conn:
         conn.execute(text(ddl_sql))
 
+    # 3️⃣ BULK INSERT עם תמיכה נכונה ב-CSV: גרשיים + פסיקים בתוך שדה + UTF-8
     row_term = detect_row_terminator(CSV_PATH)
 
     bulk_sql = f"""
@@ -78,4 +109,11 @@ def load_tms():
     with engine.begin() as conn:
         conn.execute(text(bulk_sql))
 
-    print(f"✅ Loaded TMS into dbo.{TABLE_NAME}")
+        # 4️⃣ ספירת שורות
+        result = conn.execute(text(f"SELECT COUNT(*) FROM dbo.{TABLE_NAME}")).scalar()
+
+    print(f"✅ Loaded AR into dbo.{TABLE_NAME} | rows loaded: {result}")
+
+
+if __name__ == "__main__":
+    load_AR()

@@ -1,1 +1,9 @@
-cutoff_year,cutoff_month,STATUS,cnt,sum_usd_amount
+payout_from_year,payout_from_month,exists_in_full_payout,withdrawal_type,STATUS,cnt,sum_usd_amount
+,,0,contractor_withdrawal,cancelled,181,416979.95
+,,0,other_withdrawal,,4444,63728119.4
+,,0,contractor_withdrawal,paid,21,28709.21
+2025.0,8.0,1,contractor_withdrawal,paid,1,3708.66
+2025.0,9.0,1,contractor_withdrawal,paid,7194,12777590.3
+2025.0,12.0,1,contractor_withdrawal,paid,1,11585.0
+2026.0,1.0,1,other_withdrawal,,187,372356.49
+2026.0,2.0,1,other_withdrawal,,1,1400.0

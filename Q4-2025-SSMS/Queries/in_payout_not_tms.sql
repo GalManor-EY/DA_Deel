@@ -1,67 +1,99 @@
-
+/* ============================================================
+   in_payout_not_TMS.sql
+   Q4-2025
+   Logic:
+   Payout Q4 records whose reconciliation_id does NOT appear
+   in TMS Q4 Withdrawal transactions (DISTINCT reconciliation_id)
+   ============================================================ */
 
 WITH payout_q4_2025 AS (
-    SELECT *
-    FROM dbo.stg_payout_q4_2025
-    WHERE TRY_CONVERT(date, LEFT(WITHDRAWAL_CREATED_AT, 10)) IS NOT NULL
-AND YEAR(TRY_CONVERT(date, LEFT(WITHDRAWAL_CREATED_AT, 10))) = 2025
-AND MONTH(TRY_CONVERT(date, LEFT(WITHDRAWAL_CREATED_AT, 10))) IN (10,11,12) 
-
-),
-all_bank_transactions_q4_25 AS (
-    SELECT *
-    FROM dbo.stg_tms_transactions_q4_2025
-    WHERE TRY_CONVERT(date, LEFT(CREATED_AT, 10)) IS NOT NULL
-      AND YEAR(TRY_CONVERT(date, LEFT(CREATED_AT, 10))) = 2025
-      AND MONTH(TRY_CONVERT(date, LEFT(CREATED_AT, 10))) IN (10,11,12)
-      AND DIRECTION = 'OUTGOING'
-      AND DEEL_PLATFORM_TYPE = 'Withdrawal'
-      AND TYPE <> 'Returned'
-      AND RECEIVER_ID IS NULL
-      AND SENDER_ID IS NULL
-      AND RETURN_ID IS NULL
-),
-in_payout_not_in_tms AS (
-    SELECT payout.*
-    FROM payout_q4_2025 payout
-    LEFT JOIN all_bank_transactions_q4_25 tms_q4_25
-        ON payout.tms_reconciliation_id = tms_q4_25.reconciliation_id
-    WHERE tms_q4_25.reconciliation_id IS NULL
-),
-all_tms_25 AS (
     SELECT
-        *,
-        LEFT(CREATED_AT,10) AS created_at_date
-    FROM dbo.stg_full_tms_q4_2025
-    WHERE DIRECTION = 'OUTGOING'
-      AND DEEL_PLATFORM_TYPE = 'Withdrawal'
-      AND TYPE <> 'Returned'
-      AND RECEIVER_ID is null
-      AND SENDER_ID is null
-      AND RETURN_ID is null
+        p.*,
+        d.withdrawal_date
+    FROM dbo.stg_payout_q4_2025 p
+    CROSS APPLY (
+        SELECT TRY_CONVERT(date, LEFT(p.withdrawal_created_at, 10))
+    ) d(withdrawal_date)
+    WHERE d.withdrawal_date >= '2025-10-01'
+      AND d.withdrawal_date <  '2026-01-01'
+),
+
+tms_q4_25 AS (
+    SELECT DISTINCT
+        t.reconciliation_id
+    FROM dbo.stg_tms_transactions_q4_2025 t
+    CROSS APPLY (
+        SELECT TRY_CONVERT(date, LEFT(t.created_at, 10))
+    ) d(created_date)
+    WHERE d.created_date >= '2025-10-01'
+      AND d.created_date <  '2026-01-01'
+      AND t.direction = 'OUTGOING'
+      AND t.deel_platform_type = 'Withdrawal'
+      AND t.type <> 'Returned'
+      AND t.receiver_id IS NULL
+      AND t.sender_id IS NULL
+      AND t.return_id IS NULL
+),
+
+in_payout_not_in_tms AS (
+    SELECT
+        p.*
+    FROM payout_q4_2025 p
+    WHERE NOT EXISTS (
+        SELECT 1
+        FROM tms_q4_25 t
+        WHERE t.reconciliation_id = p.tms_reconciliation_id
+    )
+),
+
+full_tms AS (
+    SELECT
+        f.reconciliation_id,
+        d.created_date
+    FROM dbo.stg_full_tms_q4_2025 f
+    CROSS APPLY (
+        SELECT TRY_CONVERT(date, LEFT(f.created_at, 10))
+    ) d(created_date)
 )
 
 SELECT
-    YEAR(all_tms_25.created_at_date)  AS cutoff_year,
-    MONTH(all_tms_25.created_at_date) AS cutoff_month,
-    CASE 
-      WHEN LOWER(TRIM(in_payout_not_in_tms.PAYMENT_PROVIDER_NAME)) = 'alviere' THEN 'Alviere'
-      ELSE 'No Alviere'
+    YEAR(ft.created_date)  AS tms_cutoff_year,
+    MONTH(ft.created_date) AS tms_cutoff_month,
+
+    CASE
+        WHEN LOWER(LTRIM(RTRIM(p.payment_provider_name))) = 'alviere'
+            THEN 'Alviere'
+        ELSE 'No Alviere'
     END AS if_alviere,
+
+    CASE
+        WHEN p.tms_reconciliation_id IS NOT NULL
+            THEN 'recon_id_exist'
+        ELSE 'no_recon_id'
+    END AS if_recon_id,
+
     COUNT(*) AS cnt,
-    
-SUM(TRY_CAST(in_payout_not_in_tms.INITIAL_WITHDRAWAL_AMOUNT_USD AS DECIMAL(18,2))) AS sum_initial_withdrawal_usd
-    FROM in_payout_not_in_tms
-LEFT JOIN all_tms_25
-  ON in_payout_not_in_tms.tms_reconciliation_id = all_tms_25.reconciliation_id
-GROUP BY YEAR(all_tms_25.created_at_date), MONTH(all_tms_25.created_at_date),
-    CASE 
-    WHEN LOWER(TRIM(in_payout_not_in_tms.PAYMENT_PROVIDER_NAME)) = 'alviere'
-        THEN 'Alviere'
-    ELSE 'No Alviere'
+
+    SUM(TRY_CAST(p.initial_withdrawal_amount_usd AS DECIMAL(18,2)))
+        AS sum_initial_withdrawal_usd,
+
+    SUM(TRY_CAST(p.total_cashout_usd AS DECIMAL(18,2)))
+        AS sum_total_cashout_usd
+
+FROM in_payout_not_in_tms p
+LEFT JOIN full_tms ft
+    ON p.tms_reconciliation_id = ft.reconciliation_id
+
+GROUP BY
+    YEAR(ft.created_date),
+    MONTH(ft.created_date),
+    CASE
+        WHEN LOWER(LTRIM(RTRIM(p.payment_provider_name))) = 'alviere'
+            THEN 'Alviere'
+        ELSE 'No Alviere'
+    END,
+    CASE
+        WHEN p.tms_reconciliation_id IS NOT NULL
+            THEN 'recon_id_exist'
+        ELSE 'no_recon_id'
     END;
-
-
-
-
-
