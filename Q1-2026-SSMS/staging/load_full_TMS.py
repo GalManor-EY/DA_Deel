@@ -1,14 +1,11 @@
-# staging/load_AR.py
+# staging/load_full_TMS.py
 import csv
 from collections import defaultdict
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-# ✅ עדכן את הנתיב לקובץ ה-AR שלך
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\updated version\AR - FY 2025_6-5-26.csv"
-
-# ✅ טבלה ייעודית לבדיקת השוואה (לא חלק מ-load_all)
-TABLE_NAME = "AR_FY_25"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\updated version\All TMS withdrawals no time or deel scope filter(16-04-2026).csv"
+TABLE_NAME = "stg_full_tms_q4_2025"
 
 
 def sanitize_base(col: str) -> str:
@@ -61,13 +58,13 @@ def detect_row_terminator(path: str) -> str:
     return "0x0d0a" if b"\r\n" in sample else "0x0a"
 
 
-def load_AR():
+def load_full_tms():
     engine = get_engine()
 
-    # 1️⃣ קריאת header בלבד (csv.reader יודע להתמודד עם גרשיים/פסיקים בתוך שדה)
+    # 1️⃣ קריאת header בלבד (Python יודע להתמודד עם גרשיים/פסיקים בתוך שדה)
     with open(CSV_PATH, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
-        headers = next(reader, None)
+        headers = next(reader)
 
     if not headers:
         raise ValueError("CSV header is empty / invalid")
@@ -112,8 +109,4 @@ def load_AR():
         # 4️⃣ ספירת שורות
         result = conn.execute(text(f"SELECT COUNT(*) FROM dbo.{TABLE_NAME}")).scalar()
 
-    print(f"✅ Loaded AR into dbo.{TABLE_NAME} | rows loaded: {result}")
-
-
-if __name__ == "__main__":
-    load_AR()
+    print(f"✅ Loaded FULL TMS into dbo.{TABLE_NAME} | rows loaded: {result}")

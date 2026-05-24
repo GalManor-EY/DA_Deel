@@ -1,22 +1,17 @@
-# staging/load_AR.py
+# staging/load_payment_contractor_withdrawal.py
+
 import csv
 from collections import defaultdict
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-# ✅ עדכן את הנתיב לקובץ ה-AR שלך
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\updated version\AR - FY 2025_6-5-26.csv"
-
-# ✅ טבלה ייעודית לבדיקת השוואה (לא חלק מ-load_all)
-TABLE_NAME = "AR_FY_25"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\Payment Table contractor withdrawal.csv"
+TABLE_NAME = "stg_payment_contractor_withdrawal"
 
 
 def sanitize_base(col: str) -> str:
     """
-    מנקה שם עמודה שיהיה חוקי ב-SQL Server:
-    - מסיר BOM אם קיים
-    - מחליף רווחים/מקפים ל-_
-    - מסיר תווים בעייתיים (משאיר אותיות/מספרים/_)
+    מנקה שם עמודה שיהיה חוקי ב-SQL Server
     """
     col = (col or "").strip()
     col = col.replace("\ufeff", "")  # BOM
@@ -32,8 +27,7 @@ def sanitize_base(col: str) -> str:
 
 def sanitize_and_deduplicate(headers):
     """
-    מוודא שכל שמות העמודות ייחודיים.
-    אם יש כפילות: COL, COL -> COL, COL_2
+    מוודא שכל שמות העמודות ייחודיים
     """
     counts = defaultdict(int)
     cols = []
@@ -41,7 +35,6 @@ def sanitize_and_deduplicate(headers):
     for i, h in enumerate(headers, start=1):
         base = sanitize_base(h)
 
-        # אם יצא שם ריק/כללי, נוסיף אינדקס כדי למנוע כפילויות
         if base == "COL":
             base = f"COL_{i}"
 
@@ -53,28 +46,27 @@ def sanitize_and_deduplicate(headers):
 
 def detect_row_terminator(path: str) -> str:
     """
-    מזהה האם הקובץ משתמש ב-CRLF (\r\n) או LF (\n)
-    ומחזיר ROWTERMINATOR מתאים ל-BULK INSERT.
+    מזהה האם השורות הן LF או CRLF
     """
     with open(path, "rb") as f:
         sample = f.read(1024 * 1024)  # 1MB
     return "0x0d0a" if b"\r\n" in sample else "0x0a"
 
 
-def load_AR():
+def load_payment_contractor_withdrawal():
     engine = get_engine()
 
-    # 1️⃣ קריאת header בלבד (csv.reader יודע להתמודד עם גרשיים/פסיקים בתוך שדה)
+    # 1️⃣ קריאת header בלבד (CSV עם גרשיים/פסיקים נטען נכון בפייתון)
     with open(CSV_PATH, newline="", encoding="utf-8") as f:
         reader = csv.reader(f)
-        headers = next(reader, None)
+        headers = next(reader)
 
     if not headers:
         raise ValueError("CSV header is empty / invalid")
 
     cols = sanitize_and_deduplicate(headers)
 
-    # 2️⃣ CREATE TABLE דינמי
+    # 2️⃣ CREATE TABLE
     columns_sql = ",\n        ".join(f"[{c}] NVARCHAR(MAX)" for c in cols)
 
     ddl_sql = f"""
@@ -89,7 +81,7 @@ def load_AR():
     with engine.begin() as conn:
         conn.execute(text(ddl_sql))
 
-    # 3️⃣ BULK INSERT עם תמיכה נכונה ב-CSV: גרשיים + פסיקים בתוך שדה + UTF-8
+    # 3️⃣ BULK INSERT עם תמיכה מלאה ב-CSV
     row_term = detect_row_terminator(CSV_PATH)
 
     bulk_sql = f"""
@@ -108,12 +100,8 @@ def load_AR():
 
     with engine.begin() as conn:
         conn.execute(text(bulk_sql))
+        rows = conn.execute(
+            text(f"SELECT COUNT(*) FROM dbo.{TABLE_NAME}")
+        ).scalar()
 
-        # 4️⃣ ספירת שורות
-        result = conn.execute(text(f"SELECT COUNT(*) FROM dbo.{TABLE_NAME}")).scalar()
-
-    print(f"✅ Loaded AR into dbo.{TABLE_NAME} | rows loaded: {result}")
-
-
-if __name__ == "__main__":
-    load_AR()
+    print(f"✅ Loaded payment_contractor_withdrawal into dbo.{TABLE_NAME} | rows loaded: {rows}")

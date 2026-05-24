@@ -5,10 +5,10 @@ from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
 # ✅ עדכן את הנתיב לקובץ ה-AR שלך
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\updated version\AR - FY 2025_6-5-26.csv"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\updated version\131006 ALL Bridge lines without grouping 7-5-26.csv"
 
 # ✅ טבלה ייעודית לבדיקת השוואה (לא חלק מ-load_all)
-TABLE_NAME = "AR_FY_25"
+TABLE_NAME = "clearing_131006_Q4_25"
 
 
 def sanitize_base(col: str) -> str:
@@ -61,7 +61,7 @@ def detect_row_terminator(path: str) -> str:
     return "0x0d0a" if b"\r\n" in sample else "0x0a"
 
 
-def load_AR():
+def load_AR_clearing():
     engine = get_engine()
 
     # 1️⃣ קריאת header בלבד (csv.reader יודע להתמודד עם גרשיים/פסיקים בתוך שדה)
@@ -116,4 +116,4 @@ def load_AR():
 
 
 if __name__ == "__main__":
-    load_AR()
+    load_AR_clearing()

@@ -1,0 +1,9 @@
+payout_from_year,payout_from_month,exists_in_full_payout,withdrawal_type,STATUS,cnt, sum_usd_amount 
+,,0,contractor_withdrawal,cancelled,181," 416,980 "
+,,0,other_withdrawal,,4444," 63,728,119 "
+,,0,contractor_withdrawal,paid,21," 28,709 "
+2025,8,1,contractor_withdrawal,paid,1," 3,709 "
+2025,9,1,contractor_withdrawal,paid,7194," 12,777,590 "
+2025,12,1,contractor_withdrawal,paid,1," 11,585 "
+2026,1,1,other_withdrawal,,187," 372,356 "
+2026,2,1,other_withdrawal,,1," 1,400 "
