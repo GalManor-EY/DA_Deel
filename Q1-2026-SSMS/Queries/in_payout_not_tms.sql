@@ -1,32 +1,32 @@
 /* ============================================================
    in_payout_not_TMS.sql
-   Q4-2025
+   Q1-2026
    Logic:
-   Payout Q4 records whose reconciliation_id does NOT appear
-   in TMS Q4 Withdrawal transactions (DISTINCT reconciliation_id)
+   Payout Q1 records whose reconciliation_id does NOT appear
+   in TMS Q1 Withdrawal transactions (DISTINCT reconciliation_id)
    ============================================================ */
 
-WITH payout_q4_2025 AS (
+WITH payout_q1_2026 AS (
     SELECT
         p.*,
         d.withdrawal_date
-    FROM dbo.stg_payout_q4_2025 p
+    FROM dbo.stg_payout_q1_2026 p
     CROSS APPLY (
         SELECT TRY_CONVERT(date, LEFT(p.withdrawal_created_at, 10))
     ) d(withdrawal_date)
-    WHERE d.withdrawal_date >= '2025-10-01'
-      AND d.withdrawal_date <  '2026-01-01'
+    WHERE d.withdrawal_date >= '2026-01-01'
+      AND d.withdrawal_date <  '2026-04-01'
 ),
 
-tms_q4_25 AS (
+tms_q1_2026 AS (
     SELECT DISTINCT
         t.reconciliation_id
-    FROM dbo.stg_tms_transactions_q4_2025 t
+    FROM dbo.stg_tms_transactions_q1_2026 t
     CROSS APPLY (
         SELECT TRY_CONVERT(date, LEFT(t.created_at, 10))
     ) d(created_date)
-    WHERE d.created_date >= '2025-10-01'
-      AND d.created_date <  '2026-01-01'
+    WHERE d.created_date >= '2026-01-01'
+      AND d.created_date <  '2026-04-01'
       AND t.direction = 'OUTGOING'
       AND t.deel_platform_type = 'Withdrawal'
       AND t.type <> 'Returned'
@@ -38,10 +38,10 @@ tms_q4_25 AS (
 in_payout_not_in_tms AS (
     SELECT
         p.*
-    FROM payout_q4_2025 p
+    FROM payout_q1_2026 p
     WHERE NOT EXISTS (
         SELECT 1
-        FROM tms_q4_25 t
+        FROM tms_q1_2026 t
         WHERE t.reconciliation_id = p.tms_reconciliation_id
     )
 ),
@@ -50,11 +50,12 @@ full_tms AS (
     SELECT
         f.reconciliation_id,
         d.created_date
-    FROM dbo.stg_full_tms_q4_2025 f
+    FROM dbo.stg_full_tms_q1_2026 f
     CROSS APPLY (
         SELECT TRY_CONVERT(date, LEFT(f.created_at, 10))
     ) d(created_date)
 )
+
 
 SELECT
     YEAR(ft.created_date)  AS tms_cutoff_year,
@@ -97,3 +98,15 @@ GROUP BY
             THEN 'recon_id_exist'
         ELSE 'no_recon_id'
     END;
+
+
+
+
+
+
+select * 
+FROM in_payout_not_in_tms p
+LEFT JOIN full_tms ft
+     ON p.tms_reconciliation_id = ft.reconciliation_id
+where ft.created_date is null -- and LOWER(LTRIM(RTRIM(p.payment_provider_name))) != 'alviere'
+

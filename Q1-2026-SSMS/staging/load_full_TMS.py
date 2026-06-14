@@ -4,8 +4,8 @@ from collections import defaultdict
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\updated version\All TMS withdrawals no time or deel scope filter(16-04-2026).csv"
-TABLE_NAME = "stg_full_tms_q4_2025"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2026\Q1-2026\All time tms withdrawals including non deel scope (2025,2026).csv"
+TABLE_NAME = "stg_full_tms_q1_2026"
 
 
 def sanitize_base(col: str) -> str:
@@ -110,3 +110,7 @@ def load_full_tms():
         result = conn.execute(text(f"SELECT COUNT(*) FROM dbo.{TABLE_NAME}")).scalar()
 
     print(f"✅ Loaded FULL TMS into dbo.{TABLE_NAME} | rows loaded: {result}")
+
+
+if __name__ == "__main__":
+    load_full_tms()

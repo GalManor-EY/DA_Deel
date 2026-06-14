@@ -523,7 +523,7 @@ from dbo.stg_full_tms_q4_2025 f
 group by month(TRY_CONVERT(date, LEFT(f.created_at,10))), year(TRY_CONVERT(date, LEFT(f.created_at,10)));
 
 
-select *
+select count(*)
 from dbo.stg_full_tms_q4_2025 f
 where f.RECONCILIATION_ID='19785211';
 
@@ -532,9 +532,8 @@ select *
 from dbo.stg_payout_q4_2025 p
 where p.tms_reconciliation_id='19785211';
 
-select DIRECTION, count(*)
-from dbo.stg_tms_transactions_q4_2025 f
-group by DIRECTION;
+select count(*)
+from dbo.stg_tms_transactions_q4_2025 f;
 
 
 select TYPE, count(*)
@@ -565,8 +564,9 @@ FROM dbo.stg_tms_transactions_q4_2025 f
 where RECONCILIATION_ID in('24656303');
 
 
-select  *
+select  count(*)
 from dbo.stg_payout_q4_2025
+
 where TMS_RECONCILIATION_ID in ('24656303');
 
 
@@ -577,3 +577,73 @@ group by invoice_period;
 
 select count(*)
 from dbo.clearing_131006_Q4_25;
+
+select top 100 *
+from [dbo].[stg_payout_q1_2026];
+
+use deel_2026;
+
+
+SELECT COUNT(*)
+FROM dbo.stg_tms_transactions_q1_2026;
+
+
+select TMS_is_reconciled, count(*)
+from dbo.stg_full_payout_q1_2026
+group by TMS_is_reconciled;
+
+
+
+
+SELECT local_tcp_port FROM sys.dm_exec_connections WHERE session_id = @@SPID;
+
+
+select count(*) from dbo.stg_full_payout_q1_2026;
+
+
+select top 100 *
+from stg_full_payout_q1_2026;
+
+select TMS_IS_RECONCILED, count(*)
+from stg_full_payout_q1_2026
+group by TMS_IS_RECONCILED;
+
+
+
+SELECT @@SERVERNAME AS server_name, DB_NAME() AS db_name;
+SELECT COUNT(*) AS cnt
+FROM dbo.stg_full_payout_q1_2026;
+
+
+
+
+-- IPE check
+
+use deel_2026
+
+SELECT COUNT(*)
+FROM dbo.stg_payment_contractor_withdrawal_q1_2026;
+-- Q1-26: 6,767,390 (IPE 6,767,215)
+
+select count(*)
+from dbo.stg_full_TMS_q1_2026;
+-- Q1-26: 6,730,192 V (IPE OK)
+
+
+select count(*)
+from dbo.stg_tms_transactions_q1_2026;
+-- Q1-26: 1,329,466 (IPE OK)
+
+select count(*)
+from dbo.stg_full_payout_q1_2026;
+-- Q1-2026: 6,617,443 V (IPE OK)
+
+
+select sum(TRY_CAST(usd_amount AS DECIMAL(18,2)))
+from dbo.stg_tms_transactions_q1_2026;
+-- Q1-26: 1,329,466 (IPE OK)
+
+select  count(*), 
+sum(TRY_CAST(total_cashout_usd AS DECIMAL(18,2))) as sum_total_cashout_usd,
+sum(TRY_CAST(INITIAL_WITHDRAWAL_AMOUNT_USD AS DECIMAL(18,2))) as sum_initial_withdrawal_usd
+from dbo.stg_payout_q1_2026;

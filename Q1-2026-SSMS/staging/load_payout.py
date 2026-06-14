@@ -3,8 +3,8 @@ import csv
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\Q4 2025 Contractor Withdrawals.csv"
-TABLE_NAME = "stg_payout_q4_2025"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2026\Q1-2026\Contractor Withdrawals q1 2026.csv"
+TABLE_NAME = "stg_payout_q1_2026"
 
 def sanitize(col: str) -> str:
     col = col.strip()
@@ -53,3 +53,7 @@ def load_payout():
         conn.execute(text(bulk_sql))
 
     print(f"✅ Loaded payout into dbo.{TABLE_NAME}")
+
+    
+if __name__ == "__main__":
+    load_payout()

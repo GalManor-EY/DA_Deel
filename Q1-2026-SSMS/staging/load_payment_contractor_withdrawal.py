@@ -5,8 +5,8 @@ from collections import defaultdict
 from sqlalchemy import text
 from utils.db_sqlserver import get_engine
 
-CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2025\Q4-2025\Payment Table contractor withdrawal.csv"
-TABLE_NAME = "stg_payment_contractor_withdrawal"
+CSV_PATH = r"\\ILTELRMPOPTAP01\uploads\Deel 2026\Q1-2026\Payments Table Contractor withdrawals.csv"
+TABLE_NAME = "stg_payment_contractor_withdrawal_Q1_2026"
 
 
 def sanitize_base(col: str) -> str:
@@ -105,3 +105,6 @@ def load_payment_contractor_withdrawal():
         ).scalar()
 
     print(f"✅ Loaded payment_contractor_withdrawal into dbo.{TABLE_NAME} | rows loaded: {rows}")
+
+if __name__ == "__main__":
+    load_payment_contractor_withdrawal()
